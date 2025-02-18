@@ -5,6 +5,7 @@ using TMPro;
 using Unity.Mathematics;
 using UnityEngine.SceneManagement;
 using System;
+using System.Collections;
 
 public class DeckCode : MonoBehaviour
 {
@@ -26,6 +27,12 @@ public class DeckCode : MonoBehaviour
     private GameObject CurrentModel;
     public Transform Spawnpoint;
     public Button Action;
+    public TMP_Text BombChecker;
+    public TMP_Text EyeText;
+    public TMP_Text ShuffleText;
+    public TMP_Text DefuseText;
+    public TMP_Text ShiftText;
+    private int currentActionCase = -1;
 
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -41,6 +48,10 @@ public class DeckCode : MonoBehaviour
         pointsPerCard = 4;
         Debug.Log(currCard);
         Action.enabled = false;
+        EyeText.enabled = false;
+        ShuffleText.enabled = false;
+        DefuseText.enabled = false;
+        ShiftText.enabled = false;
     }
 
     // Update is called once per frame
@@ -61,83 +72,101 @@ public class DeckCode : MonoBehaviour
             deck.RemoveAt(0);
             currCard = deck[0];
             Debug.Log(currCard);
-            if(CurrentModel!=null){
+            if (CurrentModel != null)
+            {
                 Destroy(CurrentModel);
             }
-            CurrentModel = Instantiate(CardModels[currCard],Spawnpoint.position,Spawnpoint.rotation);
+            CurrentModel = Instantiate(CardModels[currCard], Spawnpoint.position, Spawnpoint.rotation);
         }
+        hidetext();
         switch (currCard)
         {
             case 0:
                 Bombed();
                 break;
+
             case 1:
                 points += 5;
                 break;
+
             case 2:
                 points *= 2;
                 break;
+
             case 3:
-                //spawn action button and see what player presses
+                // Enable action button and store case number
+                EyeText.enabled = true;
                 Action.enabled = true;
-                if (!action)
-                {
-                    points += 1;
-                }
-                else
-                {
-                    if (CheckBomb())
-                    {
-                        //display that there is a bomb
-                    }
-                    else
-                    {
-                        //display that there is not a bomb
+                currentActionCase = 3; // Store case number
+                break;
+
+            case 4:
+                // Enable action button and store case number
+                ShuffleText.enabled = true;
+                Action.enabled = true;
+                currentActionCase = 4; // Store case number
+                break;
+
+            case 5:
+                // Enable action button and store case number
+                ShiftText.enabled = true;
+                Action.enabled = true;
+                currentActionCase = 5; // Store case number
+                break;
+
+            case 6:
+                // Enable action button and store case number
+                DefuseText.enabled = true;
+                Action.enabled = true;
+                currentActionCase = 6; // Store case number
+                break;
+        }
+    }
+
+    void OnAction()
+    {
+        action = true;
+        switch (currentActionCase)
+        {
+            case 3:
+                if(points>=5){
+                    points -= 5;
+                    StartCoroutine(BombDisplay());
+                    if(CheckBomb()){
+                        BombChecker.text = "There is a Bomb!";
+                    }else{
+                        BombChecker.text = "There is no Bomb!";
                     }
                 }
                 break;
             case 4:
-                //spawn action button and see what player presses
-                Action.enabled = true;
-                if (!action)
-                {
-                    points += 1;
-                }
-                else
-                {
+                if(points>=3){
+                    points -= 3;
                     Shuffle();
                 }
                 break;
             case 5:
-                //spawn action button and see what player presses
-                Action.enabled = true;
-                if (!action)
-                {
-                    points += 1;
-                }
-                else
-                {
+                if(points>=5){
+                    points -= 5;
                     ToBottom();
                 }
                 break;
+
             case 6:
-                //spawn action button and see what player presses
-                Action.enabled = true;
-                if (!action)
-                {
-                    points += 1;
-                }
-                else
-                {
+                if(points>=10){
+                    points -= 10;
                     MoveClosest();
                 }
                 break;
         }
-        action = false;
-    }
-    // code for the action button
-    void OnAction(){
-        action = true;
+
+        // Reset the action
+        Action.enabled = false;  // Disable the action button
+        EyeText.enabled = false;
+        ShuffleText.enabled = false;
+        ShiftText.enabled = false;
+        DefuseText.enabled = false;
+        currentActionCase = -1;  // Reset the case
     }
 
     private bool CheckBomb()
@@ -150,10 +179,6 @@ public class DeckCode : MonoBehaviour
             }
         }
         return false;
-    }
-    private void DisplayBomb()
-    {
-        
     }
 
     private void Shuffle()
@@ -187,10 +212,22 @@ public class DeckCode : MonoBehaviour
             {
                 deck.RemoveAt(i);
                 deck.Add(0);
+                return;
             }
         }
     }
-
+    IEnumerator BombDisplay()
+    {
+        BombChecker.enabled = true;
+        yield return new WaitForSeconds(3f);
+        BombChecker.enabled = false;
+    }
+    void hidetext(){
+        EyeText.enabled = false;
+        ShuffleText.enabled = false;
+        DefuseText.enabled = false;
+        ShiftText.enabled = false;
+    }
     void Bombed()
     {
         // display that they lost
