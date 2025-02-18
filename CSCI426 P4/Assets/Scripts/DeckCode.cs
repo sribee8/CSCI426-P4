@@ -17,9 +17,11 @@ public class DeckCode : MonoBehaviour
     public Button end;
     public TMP_Text pointsDisp;
     private int currCard;
-    private int cardCost;
-    private int pointsPerCard;
+
     bool action = false;
+    int highScore;
+    bool firstShuffle;
+    bool restart;
 
 
     // Richard adding shit
@@ -32,45 +34,63 @@ public class DeckCode : MonoBehaviour
     public TMP_Text ShuffleText;
     public TMP_Text DefuseText;
     public TMP_Text ShiftText;
+    public TMP_Text TotalPoints;
     private int currentActionCase = -1;
+
+    public AudioSource explode;
+    public AudioSource drawing;
+    public AudioSource cashOut;
 
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         points = 0;
+        firstShuffle = true;
         Shuffle();
         draw.onClick.AddListener(OnButtonClick);
         end.onClick.AddListener(End);
         Action.onClick.AddListener(OnAction);
         currCard = deck[0];
-        cardCost = 2;
-        pointsPerCard = 4;
         Debug.Log(currCard);
-        Action.enabled = false;
-        EyeText.enabled = false;
-        ShuffleText.enabled = false;
-        DefuseText.enabled = false;
-        ShiftText.enabled = false;
+        draw.gameObject.SetActive(true);
+        end.gameObject.SetActive(true);
+        Action.gameObject.SetActive(false);
+        EyeText.gameObject.SetActive(false);
+        ShuffleText.gameObject.SetActive(false);
+        DefuseText.gameObject.SetActive(false);
+        ShiftText.gameObject.SetActive(false);
+        BombChecker.gameObject.SetActive(false);
+        highScore = PlayerPrefs.GetInt("HighScoreKey", 0);
+        pointsDisp.gameObject.SetActive(true);
+        action = true;
+        restart = false;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (deck.Count % 4 == 0)
-        {
-            cardCost = (int)(cardCost * 1.25);
-            pointsPerCard = (int)(pointsPerCard * 1.25);
-        }
         pointsDisp.text = "Points: " + points.ToString();
+        if (restart)
+        {
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            }
+        }
     }
 
     void OnButtonClick()
     {
+        if (!action)
+        {
+            points += 2;
+        }
         if (deck.Count > 0)
         {
-            deck.RemoveAt(0);
+            drawing.Play();
             currCard = deck[0];
+            deck.RemoveAt(0);
             Debug.Log(currCard);
             if (CurrentModel != null)
             {
@@ -95,30 +115,34 @@ public class DeckCode : MonoBehaviour
 
             case 3:
                 // Enable action button and store case number
-                EyeText.enabled = true;
-                Action.enabled = true;
+                EyeText.gameObject.SetActive(true);
+                Action.gameObject.SetActive(true);
                 currentActionCase = 3; // Store case number
+                action = false;
                 break;
 
             case 4:
                 // Enable action button and store case number
-                ShuffleText.enabled = true;
-                Action.enabled = true;
+                ShuffleText.gameObject.SetActive(true);
+                Action.gameObject.SetActive(true);
                 currentActionCase = 4; // Store case number
+                action = false;
                 break;
 
             case 5:
                 // Enable action button and store case number
-                ShiftText.enabled = true;
-                Action.enabled = true;
+                ShiftText.gameObject.SetActive(true);
+                Action.gameObject.SetActive(true);
                 currentActionCase = 5; // Store case number
+                action = false;
                 break;
 
             case 6:
                 // Enable action button and store case number
-                DefuseText.enabled = true;
-                Action.enabled = true;
+                DefuseText.gameObject.SetActive(true);
+                Action.gameObject.SetActive(true);
                 currentActionCase = 6; // Store case number
+                action = false;
                 break;
         }
     }
@@ -161,11 +185,11 @@ public class DeckCode : MonoBehaviour
         }
 
         // Reset the action
-        Action.enabled = false;  // Disable the action button
-        EyeText.enabled = false;
-        ShuffleText.enabled = false;
-        ShiftText.enabled = false;
-        DefuseText.enabled = false;
+        Action.gameObject.SetActive(false);  // Disable the action button
+        EyeText.gameObject.SetActive(false);
+        ShuffleText.gameObject.SetActive(false);
+        ShiftText.gameObject.SetActive(false);
+        DefuseText.gameObject.SetActive(false);
         currentActionCase = -1;  // Reset the case
     }
 
@@ -188,6 +212,41 @@ public class DeckCode : MonoBehaviour
         {
             int j = rand.Next(0, i + 1);
             (deck[i], deck[j]) = (deck[j], deck[i]);
+        }
+        if (firstShuffle)
+        {
+            if (CheckBomb())
+            {
+                for (int i = 0; i < 5; i++)
+                {
+                    if (deck[i] == 0)
+                    {
+                        int ind = rand.Next(5, deck.Count);
+                        while (deck[ind] == 0)
+                        {
+                            ind = rand.Next(5, deck.Count);
+                        }
+                        int temp = deck[ind];
+                        deck[ind] = 0;
+                        deck[i] = temp;
+                    }
+                }
+            }
+            if (deck[0] != 1)
+            {
+                for (int i = 1; i < deck.Count; i++)
+                {
+                    if (deck[i] == 1)
+                    {
+                        int temp = deck[0];
+                        deck[0] = 1;
+                        deck[i] = temp;
+                        break;
+                    }
+
+                }
+            }
+            firstShuffle = false;
         }
     }
 
@@ -218,19 +277,20 @@ public class DeckCode : MonoBehaviour
     }
     IEnumerator BombDisplay()
     {
-        BombChecker.enabled = true;
+        BombChecker.gameObject.SetActive(true);
         yield return new WaitForSeconds(3f);
-        BombChecker.enabled = false;
+        BombChecker.gameObject.SetActive(false);
     }
     void hidetext(){
-        EyeText.enabled = false;
-        ShuffleText.enabled = false;
-        DefuseText.enabled = false;
-        ShiftText.enabled = false;
+        EyeText.gameObject.SetActive(false);
+        ShuffleText.gameObject.SetActive(false);
+        DefuseText.gameObject.SetActive(false);
+        ShiftText.gameObject.SetActive(false);
     }
     void Bombed()
     {
         // display that they lost
+        explode.Play();
         deck.Clear();
         points = 0;
         //have some sort of code to reset deck and game and everything
@@ -239,7 +299,27 @@ public class DeckCode : MonoBehaviour
 
     void End()
     {
+        if (CurrentModel != null)
+        {
+            Destroy(CurrentModel);
+            CurrentModel = null;
+        }
+        cashOut.Play();
         //display the total score
-
+        if (points > highScore)
+        {
+            PlayerPrefs.SetInt("HighScoreKey", points);
+        }
+        draw.gameObject.SetActive(false);
+        end.gameObject.SetActive(false);
+        Action.gameObject.SetActive(false);
+        EyeText.gameObject.SetActive(false);
+        ShuffleText.gameObject.SetActive(false);
+        DefuseText.gameObject.SetActive(false);
+        ShiftText.gameObject.SetActive(false);
+        pointsDisp.gameObject.SetActive(false);
+        TotalPoints.gameObject.SetActive(true);
+        TotalPoints.text = "Total Points: " + points.ToString() + "\nHigh Score: " + PlayerPrefs.GetInt("HighScoreKey", 0).ToString();
+        restart = true;
     }
 }
