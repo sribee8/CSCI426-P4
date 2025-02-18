@@ -2,6 +2,9 @@ using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using TMPro;
+using Unity.Mathematics;
+using UnityEngine.SceneManagement;
+using System;
 
 public class DeckCode : MonoBehaviour
 {
@@ -16,6 +19,15 @@ public class DeckCode : MonoBehaviour
     private int cardCost;
     private int pointsPerCard;
     bool action = false;
+
+
+    // Richard adding shit
+    public List<GameObject> CardModels;
+    private GameObject CurrentModel;
+    public Transform Spawnpoint;
+    public Button Action;
+
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -23,10 +35,12 @@ public class DeckCode : MonoBehaviour
         Shuffle();
         draw.onClick.AddListener(OnButtonClick);
         end.onClick.AddListener(End);
+        Action.onClick.AddListener(OnAction);
         currCard = deck[0];
         cardCost = 2;
         pointsPerCard = 4;
         Debug.Log(currCard);
+        Action.enabled = false;
     }
 
     // Update is called once per frame
@@ -47,6 +61,10 @@ public class DeckCode : MonoBehaviour
             deck.RemoveAt(0);
             currCard = deck[0];
             Debug.Log(currCard);
+            if(CurrentModel!=null){
+                Destroy(CurrentModel);
+            }
+            CurrentModel = Instantiate(CardModels[currCard],Spawnpoint.position,Spawnpoint.rotation);
         }
         switch (currCard)
         {
@@ -61,6 +79,7 @@ public class DeckCode : MonoBehaviour
                 break;
             case 3:
                 //spawn action button and see what player presses
+                Action.enabled = true;
                 if (!action)
                 {
                     points += 1;
@@ -79,6 +98,7 @@ public class DeckCode : MonoBehaviour
                 break;
             case 4:
                 //spawn action button and see what player presses
+                Action.enabled = true;
                 if (!action)
                 {
                     points += 1;
@@ -90,6 +110,7 @@ public class DeckCode : MonoBehaviour
                 break;
             case 5:
                 //spawn action button and see what player presses
+                Action.enabled = true;
                 if (!action)
                 {
                     points += 1;
@@ -101,6 +122,7 @@ public class DeckCode : MonoBehaviour
                 break;
             case 6:
                 //spawn action button and see what player presses
+                Action.enabled = true;
                 if (!action)
                 {
                     points += 1;
@@ -113,6 +135,10 @@ public class DeckCode : MonoBehaviour
         }
         action = false;
     }
+    // code for the action button
+    void OnAction(){
+        action = true;
+    }
 
     private bool CheckBomb()
     {
@@ -124,6 +150,10 @@ public class DeckCode : MonoBehaviour
             }
         }
         return false;
+    }
+    private void DisplayBomb()
+    {
+        
     }
 
     private void Shuffle()
@@ -167,10 +197,12 @@ public class DeckCode : MonoBehaviour
         deck.Clear();
         points = 0;
         //have some sort of code to reset deck and game and everything
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     void End()
     {
         //display the total score
+
     }
 }
