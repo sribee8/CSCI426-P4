@@ -35,6 +35,7 @@ public class DeckCode : MonoBehaviour
     public TMP_Text DefuseText;
     public TMP_Text ShiftText;
     public TMP_Text TotalPoints;
+    public TMP_Text CardsRemaining;
     private int currentActionCase = -1;
 
     public AudioSource explode;
@@ -63,6 +64,7 @@ public class DeckCode : MonoBehaviour
         BombChecker.gameObject.SetActive(false);
         highScore = PlayerPrefs.GetInt("HighScoreKey", 0);
         pointsDisp.gameObject.SetActive(true);
+        CardsRemaining.gameObject.SetActive(true);
         action = true;
         restart = false;
     }
@@ -71,6 +73,7 @@ public class DeckCode : MonoBehaviour
     void Update()
     {
         pointsDisp.text = "Points: " + points.ToString();
+        CardsRemaining.text = "Cards Remaining: " + deck.Count.ToString();
         if (restart)
         {
             if (Input.GetKeyDown(KeyCode.R))
@@ -319,6 +322,7 @@ public class DeckCode : MonoBehaviour
         ShiftText.gameObject.SetActive(false);
         pointsDisp.gameObject.SetActive(false);
         TotalPoints.gameObject.SetActive(true);
+        CardsRemaining.gameObject.SetActive(false);
         TotalPoints.text = "Total Points: " + points.ToString() + "\nHigh Score: " + PlayerPrefs.GetInt("HighScoreKey", 0).ToString();
         restart = true;
     }
